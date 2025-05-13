@@ -969,3 +969,26 @@ sh scripts/train.sh -g 8 -d scannet -c pretrain-msc-v1m2-0-spunet-csc -n pretrai
 
 ## Acknowledgement
 _Pointcept_ is designed by [Xiaoyang](https://xywu.me/), named by [Yixing](https://github.com/yxlao) and the logo is created by [Yuechen](https://julianjuaner.github.io/). It is derived from [Hengshuang](https://hszhao.github.io/)'s [Semseg](https://github.com/hszhao/semseg) and inspirited by several repos, e.g., [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine), [pointnet2](https://github.com/charlesq34/pointnet2), [mmcv](https://github.com/open-mmlab/mmcv/tree/master/mmcv), and [Detectron2](https://github.com/facebookresearch/detectron2).
+
+
+
+
+##KDS NOTES
+create the conda environment and activate it
+conda env create -f environment.yml --verbose
+mamba activate pointcept-torch2.5.0-cu12.4
+
+
+set some variables 
+MODELNET_DIR=/mnt/T/mnt/trainingdata/lidar/modelnet40/modelnet40_normal_resampled
+export CUDA_VISIBLE_DEVICES=0
+
+create a link to the unzipped modelnet40 folder
+ln -s ${MODELNET_DIR} ./data/modelnet40_normal_resampled
+
+
+update the config file to not use flash attetntion (if you have an old GPU)
+nano configs/modelnet40/cls-ptv3-v1m1-0-base.py
+
+now we can train a model
+sh scripts/train.sh -p python -d modelnet40 -c cls-ptv3-v1m1-0-base -n cls-ptv3-v1m1-0-base
