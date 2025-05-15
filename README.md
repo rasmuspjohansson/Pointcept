@@ -992,3 +992,15 @@ nano configs/modelnet40/cls-ptv3-v1m1-0-base.py
 
 now we can train a model
 sh scripts/train.sh -p python -d modelnet40 -c cls-ptv3-v1m1-0-base -n cls-ptv3-v1m1-0-base
+
+
+semanticKitty is a dataset that is very simular to ours (but indoors instead of from aeropplane)
+converted Dataset2Argorn to semantickitty format with 
+python convert_laz_to_semantickitti.py -h
+adjusted the .yml file and saved as 
+configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
+
+shouldbe trainable with 
+
+python tools/train.py --cfg configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
+
