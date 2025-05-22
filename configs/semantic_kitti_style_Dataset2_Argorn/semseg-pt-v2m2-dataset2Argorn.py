@@ -90,7 +90,7 @@ data = dict(
     names=names,
     train=dict(
         type=dataset_type,
-        split="train",
+        split=["00"],
         data_root=data_root,
         transform=[
             dict(type="RandomRotate", angle=[-1, 1], axis="z", center=[0, 0, 0], p=0.5),
@@ -119,7 +119,7 @@ data = dict(
     ),
     val=dict(
         type=dataset_type,
-        split="val",
+        split=["00"],
         data_root=data_root,
         transform=[
             dict(type="Copy", keys_dict={"segment": "origin_segment"}),
