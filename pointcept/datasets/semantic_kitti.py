@@ -1,10 +1,3 @@
-"""
-Semantic KITTI dataset
-
-Author: Xiaoyang Wu (xiaoyang.wu.cs@gmail.com)
-Please cite our work if the code is helpful to you.
-"""
-
 import os
 import numpy as np
 
@@ -44,8 +37,41 @@ class SemanticKITTIDataset(DefaultDataset):
                 os.path.join(seq_folder, "velodyne", file) for file in seq_files
             ]
         return data_list
-
     def get_data(self, idx):
+        data_path = self.data_list[idx % len(self.data_list)]
+        with open(data_path, "rb") as b:
+            scan = np.fromfile(b, dtype=np.float32).reshape(-1, 4)
+        coord = scan[:, :3]
+        strength = scan[:, -1].reshape([-1, 1])
+
+        label_file = data_path.replace("velodyne", "labels").replace(".bin", ".label")
+        if os.path.exists(label_file):
+            with open(label_file, "rb") as a:
+                raw_segment = np.fromfile(a, dtype=np.int32).reshape(-1)
+                # --- ADD THESE PRINT STATEMENTS ---
+                print(f"Processing {data_path}")
+                print(f"Raw segment unique values: {np.unique(raw_segment)}")
+                print(f"Raw segment min: {raw_segment.min()}, max: {raw_segment.max()}")
+                # --- END ADDED PRINT STATEMENTS ---
+                segment = np.vectorize(self.learning_map.__getitem__)(
+                    raw_segment & 0xFFFF
+                ).astype(np.int32)
+                # --- ADD THESE PRINT STATEMENTS ---
+                print(f"Mapped segment unique values: {np.unique(segment)}")
+                print(f"Mapped segment min: {segment.min()}, max: {segment.max()}")
+                # --- END ADDED PRINT STATEMENTS ---
+        else:
+            segment = np.zeros(scan.shape[0]).astype(np.int32)
+
+        data_dict = dict(
+            coord=coord,
+            strength=strength,
+            segment=segment,
+            name=self.get_data_name(idx),
+        )
+        return data_dict
+
+    def old_get_data(self, idx):
         data_path = self.data_list[idx % len(self.data_list)]
         with open(data_path, "rb") as b:
             scan = np.fromfile(b, dtype=np.float32).reshape(-1, 4)
@@ -61,6 +87,10 @@ class SemanticKITTIDataset(DefaultDataset):
                 ).astype(np.int32)
         else:
             segment = np.zeros(scan.shape[0]).astype(np.int32)
+
+
+
+
         data_dict = dict(
             coord=coord,
             strength=strength,
@@ -79,66 +109,54 @@ class SemanticKITTIDataset(DefaultDataset):
 
     @staticmethod
     def get_learning_map(ignore_index):
-        learning_map = {
-            0: ignore_index,  # "unlabeled"
-            1: ignore_index,  # "outlier" mapped to "unlabeled" --------------------------mapped
-            10: 0,  # "car"
-            11: 1,  # "bicycle"
-            13: 4,  # "bus" mapped to "other-vehicle" --------------------------mapped
-            15: 2,  # "motorcycle"
-            16: 4,  # "on-rails" mapped to "other-vehicle" ---------------------mapped
-            18: 3,  # "truck"
-            20: 4,  # "other-vehicle"
-            30: 5,  # "person"
-            31: 6,  # "bicyclist"
-            32: 7,  # "motorcyclist"
-            40: 8,  # "road"
-            44: 9,  # "parking"
-            48: 10,  # "sidewalk"
-            49: 11,  # "other-ground"
-            50: 12,  # "building"
-            51: 13,  # "fence"
-            52: ignore_index,  # "other-structure" mapped to "unlabeled" ------------------mapped
-            60: 8,  # "lane-marking" to "road" ---------------------------------mapped
-            70: 14,  # "vegetation"
-            71: 15,  # "trunk"
-            72: 16,  # "terrain"
-            80: 17,  # "pole"
-            81: 18,  # "traffic-sign"
-            99: ignore_index,  # "other-object" to "unlabeled" ----------------------------mapped
-            252: 0,  # "moving-car" to "car" ------------------------------------mapped
-            253: 6,  # "moving-bicyclist" to "bicyclist" ------------------------mapped
-            254: 5,  # "moving-person" to "person" ------------------------------mapped
-            255: 7,  # "moving-motorcyclist" to "motorcyclist" ------------------mapped
-            256: 4,  # "moving-on-rails" mapped to "other-vehicle" --------------mapped
-            257: 4,  # "moving-bus" mapped to "other-vehicle" -------------------mapped
-            258: 3,  # "moving-truck" to "truck" --------------------------------mapped
-            259: 4,  # "moving-other"-vehicle to "other-vehicle" ----------------mapped
+        # Your specific dataset labels mapped to 0-13 for 14 classes
+
+
+        #orignal nmubers 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 17, 18, 64, 66, 67, 68
+
+        return {
+            1: 0,  # Ground
+            2: 1,  # Railway
+            3: 2,  # Roads
+            4: 3,  # Veg.Low
+            5: 4,  # Veg.Medium
+            6: 5,  # Veg.High
+            7: ignore_index,
+            9: 6,  # Buildings
+            10: 7, # Water
+            11: 8, # Bridges
+            12: 9, # Vehicles
+            14:ignore_index,
+            15: 10, # Electrical_Towers
+            17: 11, # Power_lines
+            18: 12, # Solar_panels
+            64: 13, # Wind_turbines
+            # Map other unwanted labels to ignore_index
+            66: ignore_index,
+            67: ignore_index,
+            68: ignore_index,
+            # Add any other labels present in your raw data that should be ignored or mapped
+            255: ignore_index  # Common for unknown/unlabeled in some datasets
         }
-        return learning_map
 
     @staticmethod
     def get_learning_map_inv(ignore_index):
-        learning_map_inv = {
-            ignore_index: ignore_index,  # "unlabeled"
-            0: 10,  # "car"
-            1: 11,  # "bicycle"
-            2: 15,  # "motorcycle"
-            3: 18,  # "truck"
-            4: 20,  # "other-vehicle"
-            5: 30,  # "person"
-            6: 31,  # "bicyclist"
-            7: 32,  # "motorcyclist"
-            8: 40,  # "road"
-            9: 44,  # "parking"
-            10: 48,  # "sidewalk"
-            11: 49,  # "other-ground"
-            12: 50,  # "building"
-            13: 51,  # "fence"
-            14: 70,  # "vegetation"
-            15: 71,  # "trunk"
-            16: 72,  # "terrain"
-            17: 80,  # "pole"
-            18: 81,  # "traffic-sign"
+        # Inverse mapping from 0-13 back to your original dataset labels
+        return {
+            ignore_index: 255, # Assuming 255 was the original ignore
+            0: 1,   # Ground
+            1: 2,   # Railway
+            2: 3,   # Roads
+            3: 4,   # Veg.Low
+            4: 5,   # Veg.Medium
+            5: 6,   # Veg.High
+            6: 9,   # Buildings
+            7: 10,  # Water
+            8: 11,  # Bridges
+            9: 12,  # Vehicles
+            10: 15, # Electrical_Towers
+            11: 17, # Power_lines
+            12: 18, # Solar_panels
+            13: 64, # Wind_turbines
+            # Note: 66 and 67 were mapped to ignore_index, so they don't have an inverse mapping here unless you specifically want to map ignore_index to one of them.
         }
-        return learning_map_inv

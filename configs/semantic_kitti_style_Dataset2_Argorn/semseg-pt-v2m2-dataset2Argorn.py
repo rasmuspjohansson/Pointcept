@@ -65,7 +65,7 @@ scheduler = dict(
 
 # dataset settings
 dataset_type = "SemanticKITTIDataset"
-data_root = "/mnt/T/mnt/trainingdata/lidar/Dataset2AragornsamplesAsKitty"
+data_root = "/mnt/T/mnt/trainingdata/lidar/Dataset2_Aragon_semanticKitty_onlyxyzintensity"
 ignore_index = -1
 names = [
     "Ground",
@@ -90,7 +90,7 @@ data = dict(
     names=names,
     train=dict(
         type=dataset_type,
-        split=["00"],
+        split="train",
         data_root=data_root,
         transform=[
             dict(type="RandomRotate", angle=[-1, 1], axis="z", center=[0, 0, 0], p=0.5),
@@ -119,7 +119,7 @@ data = dict(
     ),
     val=dict(
         type=dataset_type,
-        split=["00"],
+        split="train",
         data_root=data_root,
         transform=[
             dict(type="Copy", keys_dict={"segment": "origin_segment"}),

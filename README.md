@@ -996,7 +996,7 @@ sh scripts/train.sh -p python -d modelnet40 -c cls-ptv3-v1m1-0-base -n cls-ptv3-
 
 semanticKitty is a dataset that is very simular to ours (but indoors instead of from aeropplane)
 converted Dataset2Argorn to semantickitty format with 
-python convert_laz_to_semantickitti.py -h
+python convert_laz_to_semantickitti.py -h  OBS! do we want to keep the rgb values? 
 adjusted the .yml file and saved as 
 configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
 

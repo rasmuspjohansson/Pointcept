@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 import laspy
 from tqdm import tqdm
-def convert_laz_to_bin_and_label(laz_file, bin_path, label_path):
+def convert_laz_to_bin_and_label(laz_file, bin_path, label_path,only_xyzintensity):
     las = laspy.read(laz_file)
 
     xyz = np.vstack((las.x, las.y, las.z)).T
@@ -21,7 +21,10 @@ def convert_laz_to_bin_and_label(laz_file, bin_path, label_path):
     else:
         raise ValueError(f"No intensity field found in {laz_file}")
 
-    points = np.hstack((xyz, intensity, rgb)).astype(np.float32)
+    if only_xyzintensity:
+        points = np.hstack((xyz, intensity)).astype(np.float32)
+    else:
+        points = np.hstack((xyz, intensity, rgb)).astype(np.float32)
     points.tofile(bin_path)
 
     if hasattr(las, 'classification'):
@@ -38,6 +41,7 @@ def main():
     parser = argparse.ArgumentParser(description="Convert LAZ files to SemanticKITTI format")
     parser.add_argument('--laz_folder', type=str, required=True, help='Folder containing .laz files with RGBXYZ+intensity+label')
     parser.add_argument('--output_folder', type=str, required=True, help='Folder to write SemanticKITTI-style output')
+    parser.add_argument('--only_xyzintensity', action='store_true',help="use this arguments i order to only keep these values")
     args = parser.parse_args()
 
     laz_folder = args.laz_folder
@@ -57,7 +61,7 @@ def main():
         bin_path = os.path.join(velodyne_dir, base_name + '.bin')
         label_path = os.path.join(label_dir, base_name + '.label')
 
-        convert_laz_to_bin_and_label(input_path, bin_path, label_path)
+        convert_laz_to_bin_and_label(input_path, bin_path, label_path,args.only_xyzintensity)
 
     print("✅ Conversion complete.")
 
