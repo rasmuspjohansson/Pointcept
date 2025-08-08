@@ -1004,3 +1004,27 @@ shouldbe trainable with
 
 python tools/train.py --cfg configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
 
+
+in order to use a model trained with the last comand on a new dataset do 
+
+python tools/test.py --config-file configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn-test.py --options weight=exp/default/model/model_best.pth
+
+# classifying las data with a tained pointcept model
+1. turn it into .bin files
+python convert_laz_to_semantickitti.py 
+2. split .bin file into smaller chunks
+python split_bin_for_inference.py --input_file /mnt/T/mnt/trainingdata/lidar/Dataset2_Aragon_semanticKitty_onlyxyzintensity_forinference/dataset/sequences/00/velodyne/000001.bin --output_dir /mnt/T/mnt/trainingdata/lidar/splited_2 --chunk_size 20 --overlap 1
+3. do inference)
+python tools/test.py --config-file configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn-test.py --options weight=exp/default/model/model_best.pth
+
+4. merge output files into a single classified .las file
+python stitch_to_las.py --pred_dir exp/default/result/ --original_bin_file /mnt/T/mnt/trainingdata/lidar/Dataset2_Aragon_semanticKitty_onlyxyzintensity_forinference/dataset/sequences/00/velodyne/000001.bin --split_dir /mnt/T/mnt/trainingdata/lidar/splited_2/dataset/ --output_las /mnt/T/mnt/random_files/outputlas6.las
+
+
+TODO: 
+try the complete 1.2.3.4 instructions steps again and make usre that all folders and filefilenames are as they should (I had to manually create a folder and move some data when I did it last time)
+train for longer in order tro create a better model
+try inference on danish data to verify that geolocation of the data works as it should
+can we get acess to a modern gpu in order to use flash attention? 
+classify danish data with a good model, clean up teh classifications . use it as trianig data , train again , use for prediction on our data .
+

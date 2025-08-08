@@ -15,9 +15,9 @@ class SemanticKITTIDataset(DefaultDataset):
 
     def get_data_list(self):
         split2seq = dict(
-            train=["00"], #train=[0, 1, 2, 3, 4, 5, 6, 7, 9, 10],
-            val=["00"], #val=[8],
-            test =["00"], #test=[11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+            train=["00_split"], #train=[0, 1, 2, 3, 4, 5, 6, 7, 9, 10],
+            val=["00_split"], #val=[8],
+            test =["00_split"], #test=[11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
         )
         if isinstance(self.split, str):
             seq_list = split2seq[self.split]
@@ -37,7 +37,57 @@ class SemanticKITTIDataset(DefaultDataset):
                 os.path.join(seq_folder, "velodyne", file) for file in seq_files
             ]
         return data_list
+
+    # Compact version for quick testing:
+    def get_dummy_data(self, idx):
+        """Minimal dummy data generator (worked when name get_data )"""
+        np.random.seed(idx)
+        max_num = 25 # this number casues the cuda error ! 4608015 # this number is ok 25
+        coord = np.random.uniform(-max_num, max_num, (6000, 3)).astype(np.float32)
+        strength = np.random.uniform(0, 1, (6000, 1)).astype(np.float32)
+        # Create segments with all classes represented
+        number = 12 #(was 14)
+        segment = np.random.randint(0, number, 6000).astype(np.int32)
+        # Ensure we have all classes 0-13
+        segment[:number] = np.arange(number)
+        # Add some ignore samples
+        segment[number:114] = self.ignore_index  # 100 ignore samples
+        # Shuffle
+        np.random.shuffle(segment)
+    
+        return dict(
+            coord=coord,
+            strength=strength, 
+            segment=segment,
+            name=f"dummy_{idx:06d}"
+        )
+
+
     def get_data(self, idx):
+        data_path = self.data_list[idx % len(self.data_list)]
+        with open(data_path, "rb") as b:
+            scan = np.fromfile(b, dtype=np.float32).reshape(-1, 4)
+        coord = scan[:, :3].astype(np.float32)
+        strength = scan[:, -1].reshape([-1, 1]).astype(np.float32)
+        label_file = data_path.replace("velodyne", "labels").replace(".bin", ".label")
+        if os.path.exists(label_file):
+            with open(label_file, "rb") as a:
+                raw_segment = np.fromfile(a, dtype=np.int32).reshape(-1)
+                segment = np.vectorize(self.learning_map.__getitem__)(
+                    raw_segment & 0xFFFF
+                ).astype(np.int32)
+        else:
+            segment = np.zeros(scan.shape[0]).astype(np.int32)
+
+        data_dict = dict(
+            coord=coord,
+            strength=strength,
+            segment=segment,
+            name=self.get_data_name(idx),
+        )
+        return data_dict
+
+    def OLD_get_data(self, idx):
         data_path = self.data_list[idx % len(self.data_list)]
         with open(data_path, "rb") as b:
             scan = np.fromfile(b, dtype=np.float32).reshape(-1, 4)
@@ -69,6 +119,9 @@ class SemanticKITTIDataset(DefaultDataset):
             segment=segment,
             name=self.get_data_name(idx),
         )
+        print("coord:"+str(coord.shape))
+        print("segment:"+str(segment.shape))
+        #print("name:"+str(data_dict["name"].shape))
         return data_dict
 
     def old_get_data(self, idx):

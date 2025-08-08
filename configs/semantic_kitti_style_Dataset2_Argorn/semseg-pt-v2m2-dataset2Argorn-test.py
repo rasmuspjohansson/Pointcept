@@ -65,7 +65,7 @@ scheduler = dict(
 
 # dataset settings
 dataset_type = "SemanticKITTIDataset"
-data_root = "/mnt/T/mnt/trainingdata/lidar/Dataset2_Aragon_semanticKitty_onlyxyzintensity"
+data_root = "/mnt/T/mnt/trainingdata/lidar/splited_2"
 ignore_index = -1
 names = [
     "Ground",
@@ -93,26 +93,6 @@ data = dict(
         split="train",
         data_root=data_root,
         transform=[
-            #dict(type="RandomRotate", angle=[-1, 1], axis="z", center=[0, 0, 0], p=0.5),
-            #dict(type="RandomScale", scale=[0.9, 1.1]),
-            #dict(type="RandomFlip", p=0.5),
-            #dict(type="RandomJitter", sigma=0.005, clip=0.02),
-            #dict(
-            #    type="GridSample",
-            #    grid_size=0.05,
-            #    hash_type="fnv",
-            #    mode="train",
-            #    return_grid_coord=True,
-            #),
-            #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
-            #dict(type="SphereCrop", sample_rate=0.8, mode="random"),
-            #dict(type="SphereCrop", point_max=120000, mode="random"),
-            #dict(type="ToTensor"),
-            #dict(
-            #    type="Collect",
-            #    keys=("coord", "grid_coord", "segment"),
-            #    feat_keys=("coord", "strength"),
-            #),
             dict(type="SphereCrop", point_max=80000, mode="random"),
             dict(type="ToTensor"),
             dict(
@@ -120,29 +100,15 @@ data = dict(
                 keys=("coord", "segment"),
                 feat_keys=("coord", "strength"),
                 ),
-   
-
         ],
         test_mode=False,
         ignore_index=ignore_index,
     ),
     val=dict(
         type=dataset_type,
-        split="train",
+        split="test",
         data_root=data_root,
         transform=[
-            #dict(type="Copy", keys_dict={"segment": "origin_segment"}),
-            #dict(
-            #    type="GridSample",
-            #    grid_size=0.05,
-            #    hash_type="fnv",
-            #    mode="train",
-            #    return_grid_coord=True,
-            #    return_inverse=True,
-            #),
-            #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
-   
-            dict(type="SphereCrop", point_max=80000, mode="random"),
             dict(type="ToTensor"),
             dict(
                 type="Collect",
@@ -150,8 +116,36 @@ data = dict(
                 feat_keys=("coord", "strength"),
             ),
         ],
-   
         test_mode=False,
+        ignore_index=ignore_index,
+    ),
+    test=dict(
+        type=dataset_type,
+        split="test",
+        data_root=data_root,
+        transform=[],
+        test_mode=True,
+        test_cfg=dict(
+            voxelize=dict(
+                type="GridSample",
+                grid_size=0.1,  # High resolution as requested
+                hash_type="fnv",
+                mode="test",
+                return_grid_coord=True,
+            ),
+            crop=None,
+            post_transform=[
+                dict(type="ToTensor"),
+                dict(
+                    type="Collect",
+                    keys=("coord", "grid_coord", "index"),
+                    feat_keys=("coord", "strength"),
+                ),
+            ],
+            aug_transform=[
+                [dict(type="RandomRotateTargetAngle", angle=[0], axis="z", center=[0, 0, 0], p=1)]
+            ],
+        ),
         ignore_index=ignore_index,
     ),
 )

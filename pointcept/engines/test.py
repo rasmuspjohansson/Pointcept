@@ -240,8 +240,13 @@ class SemSegTester(TesterBase):
                 )
                 pred = pred[:, 0]  # for mIoU, TODO: support top3 mIoU
             elif self.cfg.data.test.type == "SemanticKITTIDataset":
-                # 00_000000 -> 00, 000000
-                sequence_name, frame_name = data_name.split("_")
+                # 00_000000 -> 00, 000000 or 00_split_00_000000 -> 00_split, 00_000000
+                if "_split_" in data_name:
+                    parts = data_name.split("_split_")
+                    sequence_name = parts[0] + "_split"
+                    frame_name = parts[1]
+                else:
+                    sequence_name, frame_name = data_name.split("_")
                 os.makedirs(
                     os.path.join(
                         save_path, "submit", "sequences", sequence_name, "predictions"
@@ -485,8 +490,13 @@ class DINOSemSegTester(TesterBase):
                 )
                 pred = pred[:, 0]  # for mIoU, TODO: support top3 mIoU
             elif self.cfg.data.test.type == "SemanticKITTIDataset":
-                # 00_000000 -> 00, 000000
-                sequence_name, frame_name = data_name.split("_")
+                # 00_000000 -> 00, 000000 or 00_split_00_000000 -> 00_split, 00_000000
+                if "_split_" in data_name:
+                    parts = data_name.split("_split_")
+                    sequence_name = parts[0] + "_split"
+                    frame_name = parts[1]
+                else:
+                    sequence_name, frame_name = data_name.split("_")
                 os.makedirs(
                     os.path.join(
                         save_path, "submit", "sequences", sequence_name, "predictions"
