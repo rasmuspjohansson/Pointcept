@@ -1028,3 +1028,6 @@ try inference on danish data to verify that geolocation of the data works as it 
 can we get acess to a modern gpu in order to use flash attention? 
 classify danish data with a good model, clean up teh classifications . use it as trianig data , train again , use for prediction on our data .
 
+OBS!!! test config needs to match trainconfig : 
+configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn-test.py  (this one is not up to date !)
+python tools/train.py --config configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py

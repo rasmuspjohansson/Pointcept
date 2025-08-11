@@ -133,14 +133,15 @@ data = dict(
         data_root=data_root,
         transform=[
             #dict(type="Copy", keys_dict={"segment": "origin_segment"}),
-            #dict(
-            #    type="GridSample",
-            #    grid_size=0.05,
-            #    hash_type="fnv"
-            #    mode="train",
-            #    return_grid_coord=True,
-            #    return_inverse=True,
-            #),
+            dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
+            dict(
+                type="GridSample",
+                grid_size=0.05,
+                hash_type="fnv"
+                mode="train",
+                return_grid_coord=True,
+                return_inverse=True,
+            ),
             #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
    
             dict(type="SphereCrop", point_max=80000, mode="random"),
