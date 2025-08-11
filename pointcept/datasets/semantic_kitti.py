@@ -7,7 +7,7 @@ from .defaults import DefaultDataset
 
 @DATASETS.register_module()
 class SemanticKITTIDataset(DefaultDataset):
-    def __init__(self, ignore_index=-1, **kwargs):
+    def __init__(self, ignore_index=1, **kwargs):
         self.ignore_index = ignore_index
         self.learning_map = self.get_learning_map(ignore_index)
         self.learning_map_inv = self.get_learning_map_inv(ignore_index)
@@ -15,9 +15,9 @@ class SemanticKITTIDataset(DefaultDataset):
 
     def get_data_list(self):
         split2seq = dict(
-            train=["00_split"], #train=[0, 1, 2, 3, 4, 5, 6, 7, 9, 10],
-            val=["00_split"], #val=[8],
-            test =["00_split"], #test=[11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+            train=["00"],# '00_split' #train=[0, 1, 2, 3, 4, 5, 6, 7, 9, 10],
+            val=["00"], #val=[8],
+            test =["00"], #test=[11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
         )
         if isinstance(self.split, str):
             seq_list = split2seq[self.split]
@@ -64,10 +64,16 @@ class SemanticKITTIDataset(DefaultDataset):
 
 
     def get_data(self, idx):
+        print(idx)
         data_path = self.data_list[idx % len(self.data_list)]
+        print("data_path"+str(data_path))
         with open(data_path, "rb") as b:
             scan = np.fromfile(b, dtype=np.float32).reshape(-1, 4)
         coord = scan[:, :3].astype(np.float32)
+        # now done in separate trANSFOMR ! coord -= coord.mean(axis=0)
+        #coord /= np.abs(coord).max()
+        print(coord[0])
+
         strength = scan[:, -1].reshape([-1, 1]).astype(np.float32)
         label_file = data_path.replace("velodyne", "labels").replace(".bin", ".label")
         if os.path.exists(label_file):
@@ -84,7 +90,15 @@ class SemanticKITTIDataset(DefaultDataset):
             strength=strength,
             segment=segment,
             name=self.get_data_name(idx),
+
         )
+        data_dict["segment"][data_dict["segment"]==-1] =1
+        print(data_dict["segment"])
+        print("data_dict max()")
+
+        print(data_dict["segment"].max())
+        print("data_dict min()")
+        print(data_dict["segment"].min())
         return data_dict
 
     def OLD_get_data(self, idx):
@@ -168,6 +182,7 @@ class SemanticKITTIDataset(DefaultDataset):
         #orignal nmubers 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 17, 18, 64, 66, 67, 68
 
         return {
+            -1: 1,  # Ground
             1: 0,  # Ground
             2: 1,  # Railway
             3: 2,  # Roads

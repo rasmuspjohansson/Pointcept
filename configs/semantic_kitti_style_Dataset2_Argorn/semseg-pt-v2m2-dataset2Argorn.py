@@ -1,7 +1,7 @@
 _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
-batch_size = 1  # bs: total bs in all gpus
+batch_size = 8  # bs: total bs in all gpus
 mix_prob = 0.8
 empty_cache = False
 enable_amp = True
@@ -97,13 +97,14 @@ data = dict(
             #dict(type="RandomScale", scale=[0.9, 1.1]),
             #dict(type="RandomFlip", p=0.5),
             #dict(type="RandomJitter", sigma=0.005, clip=0.02),
-            #dict(
-            #    type="GridSample",
-            #    grid_size=0.05,
-            #    hash_type="fnv",
-            #    mode="train",
-            #    return_grid_coord=True,
-            #),
+            dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
+            dict(
+                type="GridSample",
+                grid_size=0.05,
+                hash_type="fnv",
+                mode="train",
+                return_grid_coord=True,
+            ),
             #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
             #dict(type="SphereCrop", sample_rate=0.8, mode="random"),
             #dict(type="SphereCrop", point_max=120000, mode="random"),
@@ -135,7 +136,7 @@ data = dict(
             #dict(
             #    type="GridSample",
             #    grid_size=0.05,
-            #    hash_type="fnv",
+            #    hash_type="fnv"
             #    mode="train",
             #    return_grid_coord=True,
             #    return_inverse=True,

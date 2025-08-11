@@ -1000,9 +1000,9 @@ python convert_laz_to_semantickitti.py -h  OBS! do we want to keep the rgb value
 adjusted the .yml file and saved as 
 configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
 
-shouldbe trainable with 
+train with 
 
-python tools/train.py --cfg configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
+python tools/train.py --config configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
 
 
 in order to use a model trained with the last comand on a new dataset do 
