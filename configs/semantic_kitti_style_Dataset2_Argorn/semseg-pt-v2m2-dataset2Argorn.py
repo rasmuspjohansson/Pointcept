@@ -157,4 +157,79 @@ data = dict(
         test_mode=False,
         ignore_index=ignore_index,
     ),
+
+    test=dict(
+        type=dataset_type,
+        split="val",
+        data_root=data_root,
+        transform=[
+            dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
+            dict(type="Copy", keys_dict={"segment": "origin_segment"}),
+            dict(
+                type="GridSample",
+                grid_size=0.025,
+                hash_type="fnv",
+                mode="train",
+                return_inverse=True,
+            ),
+        ],
+        test_mode=True,
+        test_cfg=dict(
+            voxelize=dict(
+                type="GridSample",
+                grid_size=0.05,
+                hash_type="fnv",
+                mode="test",
+                return_grid_coord=True,
+            ),
+            crop=None,
+            post_transform=[
+                dict(type="ToTensor"),
+                dict(
+                    type="Collect",
+                    keys=("coord", "grid_coord", "index"),
+                    feat_keys=("coord", "strength"),
+                ),
+            ],
+            aug_transform=[
+                [
+                    dict(
+                        type="RandomRotateTargetAngle",
+                        angle=[0],
+                        axis="z",
+                        center=[0, 0, 0],
+                        p=1,
+                    )
+                ],
+                [
+                    dict(
+                        type="RandomRotateTargetAngle",
+                        angle=[1 / 2],
+                        axis="z",
+                        center=[0, 0, 0],
+                        p=1,
+                    )
+                ],
+                [
+                    dict(
+                        type="RandomRotateTargetAngle",
+                        angle=[1],
+                        axis="z",
+                        center=[0, 0, 0],
+                        p=1,
+                    )
+                ],
+                [
+                    dict(
+                        type="RandomRotateTargetAngle",
+                        angle=[3 / 2],
+                        axis="z",
+                        center=[0, 0, 0],
+                        p=1,
+                    )
+                ],
+            ],
+        ),
+        ignore_index=ignore_index,
+    ),
 )

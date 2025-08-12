@@ -1031,3 +1031,7 @@ classify danish data with a good model, clean up teh classifications . use it as
 OBS!!! test config needs to match trainconfig : 
 configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn-test.py  (this one is not up to date !)
 python tools/train.py --config configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
+
+
+THIS NOW WORKS
+python tools/test.py --config configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py --options weight=exp/default/model/model_best.pth
