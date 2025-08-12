@@ -73,6 +73,9 @@ class SemanticKITTIDataset(DefaultDataset):
         # now done in separate trANSFOMR ! coord -= coord.mean(axis=0)
         #coord /= np.abs(coord).max()
         print(coord[0])
+        print(coord.min())
+        print(coord.max())
+
 
         strength = scan[:, -1].reshape([-1, 1]).astype(np.float32)
         label_file = data_path.replace("velodyne", "labels").replace(".bin", ".label")

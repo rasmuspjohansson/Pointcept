@@ -4,6 +4,7 @@ _base_ = ["../_base_/default_runtime.py"]
 batch_size = 8  # bs: total bs in all gpus
 mix_prob = 0.8
 empty_cache = False
+# its seems like disabling automatic precision can avoid the:  Assertion `idx_dim >= 0 && idx_dim < index_size && "index out of bounds"` failed. 
 enable_amp = True
 
 # model settings
@@ -137,7 +138,7 @@ data = dict(
             dict(
                 type="GridSample",
                 grid_size=0.05,
-                hash_type="fnv"
+                hash_type="fnv",
                 mode="train",
                 return_grid_coord=True,
                 return_inverse=True,
