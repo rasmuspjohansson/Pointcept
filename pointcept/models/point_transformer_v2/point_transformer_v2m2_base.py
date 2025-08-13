@@ -559,6 +559,7 @@ class PointTransformerV2(nn.Module):
         offset = data_dict["offset"].int()
         print("point_transformer_v2m2_base.py : coord "+str(coord))
         print("point_transformer_v2m2_base.py : offset "+str(offset))
+        print("nr of points: "+str(coord.shape))
 
         # a batch of point cloud is a list of coord, feat and offset
         points = [coord, feat, offset]

@@ -254,6 +254,8 @@ class SemSegTester(TesterBase):
                     exist_ok=True,
                 )
                 submit = pred.astype(np.uint32)
+                print("Histogram of prediction")
+                print(np.histogram(submit, bins=10, range=None, density=None, weights=None))
                 submit = np.vectorize(
                     self.test_loader.dataset.learning_map_inv.__getitem__
                 )(submit).astype(np.uint32)

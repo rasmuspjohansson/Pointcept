@@ -75,6 +75,7 @@ class SemanticKITTIDataset(DefaultDataset):
         print(coord[0])
         print(coord.min())
         print(coord.max())
+        print("semantic_kitti.py : nr of points loaded : "+str(len(coord)))
 
 
         strength = scan[:, -1].reshape([-1, 1]).astype(np.float32)
@@ -185,7 +186,6 @@ class SemanticKITTIDataset(DefaultDataset):
         #orignal nmubers 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 17, 18, 64, 66, 67, 68
 
         return {
-            -1: 1,  # Ground
             1: 0,  # Ground
             2: 1,  # Railway
             3: 2,  # Roads
@@ -214,7 +214,7 @@ class SemanticKITTIDataset(DefaultDataset):
     def get_learning_map_inv(ignore_index):
         # Inverse mapping from 0-13 back to your original dataset labels
         return {
-            ignore_index: 255, # Assuming 255 was the original ignore
+            ignore_index: -1, # Assuming 255 was the original ignore
             0: 1,   # Ground
             1: 2,   # Railway
             2: 3,   # Roads

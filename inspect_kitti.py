@@ -19,6 +19,9 @@ def inspect_kitti_bin(file_path):
         with open(file_path, "rb") as f:
             scan = np.fromfile(f, dtype=np.float32).reshape(-1, 4)
 
+
+        print("num points in .bin file : " +str(len(scan)))
+
         coord = scan[:, :3] # x, y, z coordinates
         strength = scan[:, -1] # intensity value
 

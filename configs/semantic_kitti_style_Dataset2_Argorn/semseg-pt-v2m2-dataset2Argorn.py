@@ -2,10 +2,11 @@ _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
 batch_size = 8  # bs: total bs in all gpus
+num_worker = 8
 mix_prob = 0.8
 empty_cache = False
 # its seems like disabling automatic precision can avoid the:  Assertion `idx_dim >= 0 && idx_dim < index_size && "index out of bounds"` failed. 
-enable_amp = True
+enable_amp = False
 
 # model settings
 model = dict(
@@ -98,7 +99,7 @@ data = dict(
             #dict(type="RandomScale", scale=[0.9, 1.1]),
             #dict(type="RandomFlip", p=0.5),
             #dict(type="RandomJitter", sigma=0.005, clip=0.02),
-            dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
+            #dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
             dict(
                 type="GridSample",
                 grid_size=0.05,
@@ -106,6 +107,7 @@ data = dict(
                 mode="train",
                 return_grid_coord=True,
             ),
+            #dict(type="NormalizeCoord"),  # temp to debug prinoputs
             #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
             #dict(type="SphereCrop", sample_rate=0.8, mode="random"),
             #dict(type="SphereCrop", point_max=120000, mode="random"),
@@ -115,7 +117,7 @@ data = dict(
             #    keys=("coord", "grid_coord", "segment"),
             #    feat_keys=("coord", "strength"),
             #),
-            dict(type="SphereCrop", point_max=80000, mode="random"),
+            dict(type="SphereCrop", point_max=2000, mode="random"),
             dict(type="ToTensor"),
             dict(
                 type="Collect",
@@ -133,8 +135,8 @@ data = dict(
         split="train",
         data_root=data_root,
         transform=[
-            #dict(type="Copy", keys_dict={"segment": "origin_segment"}),
-            dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
+            dict(type="Copy", keys_dict={"segment": "origin_segment"}),
+            #dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
             dict(
                 type="GridSample",
                 grid_size=0.05,
@@ -143,9 +145,10 @@ data = dict(
                 return_grid_coord=True,
                 return_inverse=True,
             ),
+
             #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
    
-            dict(type="SphereCrop", point_max=80000, mode="random"),
+            dict(type="SphereCrop", point_max=2000, mode="random"),
             dict(type="ToTensor"),
             dict(
                 type="Collect",
@@ -163,11 +166,11 @@ data = dict(
         split="val",
         data_root=data_root,
         transform=[
-            dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
+            #dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
             dict(type="Copy", keys_dict={"segment": "origin_segment"}),
             dict(
                 type="GridSample",
-                grid_size=0.025,
+                grid_size=0.05,
                 hash_type="fnv",
                 mode="train",
                 return_inverse=True,
@@ -175,6 +178,7 @@ data = dict(
         ],
         test_mode=True,
         test_cfg=dict(
+            #dict(type="NormalizeCoord"),
             voxelize=dict(
                 type="GridSample",
                 grid_size=0.05,
@@ -191,44 +195,44 @@ data = dict(
                     feat_keys=("coord", "strength"),
                 ),
             ],
-            aug_transform=[
-                [
-                    dict(
-                        type="RandomRotateTargetAngle",
-                        angle=[0],
-                        axis="z",
-                        center=[0, 0, 0],
-                        p=1,
-                    )
-                ],
-                [
-                    dict(
-                        type="RandomRotateTargetAngle",
-                        angle=[1 / 2],
-                        axis="z",
-                        center=[0, 0, 0],
-                        p=1,
-                    )
-                ],
-                [
-                    dict(
-                        type="RandomRotateTargetAngle",
-                        angle=[1],
-                        axis="z",
-                        center=[0, 0, 0],
-                        p=1,
-                    )
-                ],
-                [
-                    dict(
-                        type="RandomRotateTargetAngle",
-                        angle=[3 / 2],
-                        axis="z",
-                        center=[0, 0, 0],
-                        p=1,
-                    )
-                ],
-            ],
+            aug_transform=[],
+            #    [
+            #        dict(
+            #            type="RandomRotateTargetAngle",
+            #            angle=[0],
+            #            axis="z",
+            #            center=[0, 0, 0],
+            #            p=1,
+            #        )
+            #    ],
+            #    [
+            #        dict(
+            #            type="RandomRotateTargetAngle",
+            #            angle=[1 / 2],
+            #            axis="z",
+            #            center=[0, 0, 0],
+            #            p=1,
+            #        )
+            #    ],
+            #    [
+            #        dict(
+            #            type="RandomRotateTargetAngle",
+            #            angle=[1],
+            #            axis="z",
+            #            center=[0, 0, 0],
+            #            p=1,
+            #        )
+            #    ],
+            #    [
+            #        dict(
+            #            type="RandomRotateTargetAngle",
+            #            angle=[3 / 2],
+            #            axis="z",
+            #            center=[0, 0, 0],
+            #            p=1,
+            #        )
+            #    ],
+            #],
         ),
         ignore_index=ignore_index,
     ),

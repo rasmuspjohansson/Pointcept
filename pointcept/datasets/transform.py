@@ -148,12 +148,20 @@ class NormalizeColor(object):
 @TRANSFORMS.register_module()
 class NormalizeCoord(object):
     def __call__(self, data_dict):
+        print("NormalizeCoord start")
+        print("input shape : "+str(len(data_dict["coord"])))
+        print(data_dict["coord"].shape)
         if "coord" in data_dict.keys():
             # modified from pointnet2
             centroid = np.mean(data_dict["coord"], axis=0)
             data_dict["coord"] -= centroid
             m = np.max(np.sqrt(np.sum(data_dict["coord"] ** 2, axis=1)))
             data_dict["coord"] = data_dict["coord"] / m
+
+        print("output shape : "+str(len(data_dict["coord"])))
+
+        print("NormalizeCoord end")
+
         return data_dict
 
 
