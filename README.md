@@ -1033,5 +1033,5 @@ configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn-test.
 python tools/train.py --config configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py
 
 
-THIS NOW WORKS
+THIS NOW WORKS, BUT its seems like all points are classified to the same value! so something is wrong! 
 python tools/test.py --config configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py --options weight=exp/default/model/model_best.pth

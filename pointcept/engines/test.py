@@ -173,6 +173,7 @@ class SemSegTester(TesterBase):
             segment = data_dict.pop("segment")
             data_name = data_dict.pop("name")
             pred_save_path = os.path.join(save_path, "{}_pred.npy".format(data_name))
+            print("saving to : "+str(pred_save_path))
             if os.path.isfile(pred_save_path):
                 logger.info(
                     "{}/{}: {}, loaded pred and label.".format(
@@ -422,6 +423,9 @@ class DINOSemSegTester(TesterBase):
             dino_feat = data_dict.pop("dino_feat").cuda(non_blocking=True)
             dino_offset = data_dict.pop("dino_offset").cuda(non_blocking=True)
             pred_save_path = os.path.join(save_path, "{}_pred.npy".format(data_name))
+
+            print("test.py is calculating accuracy based on : "+str(pred_save_path) + ' and :data_dict["origin_segment"] ')
+
             if os.path.isfile(pred_save_path):
                 logger.info(
                     "{}/{}: {}, loaded pred and label.".format(

@@ -1,11 +1,12 @@
 _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
+# misc custom setting
 batch_size = 8  # bs: total bs in all gpus
-num_worker = 8
+num_worker = 1
+
 mix_prob = 0.8
 empty_cache = False
-# its seems like disabling automatic precision can avoid the:  Assertion `idx_dim >= 0 && idx_dim < index_size && "index out of bounds"` failed. 
 enable_amp = False
 
 # model settings
@@ -14,7 +15,7 @@ model = dict(
     backbone=dict(
         type="PT-v2m2",
         in_channels=4,
-        num_classes=14,  # ← updated
+        num_classes=14,
         patch_embed_depth=1,
         patch_embed_channels=48,
         patch_embed_groups=6,
@@ -34,22 +35,20 @@ model = dict(
         attn_drop_rate=0.0,
         drop_path_rate=0.3,
         enable_checkpoint=False,
-        unpool_backend="interp", #unpool_backend="map",
+        unpool_backend="map",  # map / interp
     ),
+    # fmt: off
     criteria=[
-        dict(
-            type="CrossEntropyLoss",
-            weight=[1.0] * 14,  # Placeholder weights, replace with real ones if known
-            loss_weight=1.0,
-            ignore_index=-1,
-        ),
-        dict(
-            type="LovaszLoss",
-            mode="multiclass",
-            loss_weight=1.0,
-            ignore_index=-1,
-        ),
+        dict(type="CrossEntropyLoss",
+             weight=[1.0] * 14,  # Placeholder weights, replace with real ones if known
+
+             #weight=[3.1557, 8.7029, 7.8281, 6.1354, 6.3161, 7.9937, 8.9704, 10.1922, 1.6155, 4.2187,
+             #        1.9385, 5.5455, 2.0198, 2.6261, 1.3212, 5.1102, 2.5492, 5.8585, 7.3929],
+             loss_weight=1.0,
+             ignore_index=-1),
+        dict(type="LovaszLoss", mode="multiclass", loss_weight=1.0, ignore_index=-1),
     ],
+    # fmt: on
 )
 
 # scheduler settings
@@ -67,23 +66,29 @@ scheduler = dict(
 
 # dataset settings
 dataset_type = "SemanticKITTIDataset"
+#data_root = "data/semantic_kitti"
 data_root = "/mnt/T/mnt/trainingdata/lidar/Dataset2_Aragon_semanticKitty_onlyxyzintensity"
 ignore_index = -1
 names = [
-    "Ground",
-    "Railway",
-    "Roads",
-    "Veg.Low",
-    "Veg.Medium",
-    "Veg.High",
-    "Buildings",
-    "Water",
-    "Bridges",
-    "Vehicles",
-    "Electrical_Towers",
-    "Power_lines",
-    "Solar_panels",
-    "Wind_turbines",
+    "car",
+    "bicycle",
+    "motorcycle",
+    "truck",
+    "other-vehicle",
+    "person",
+    "bicyclist",
+    "motorcyclist",
+    "road",
+    "parking",
+    "sidewalk",
+    "other-ground",
+    "building",
+    "fence",
+    "vegetation",
+    "trunk",
+    "terrain",
+    "pole",
+    "traffic-sign",
 ]
 
 data = dict(
@@ -95,11 +100,18 @@ data = dict(
         split="train",
         data_root=data_root,
         transform=[
+            # dict(type="RandomDropout", dropout_ratio=0.2, dropout_application_ratio=0.2),
+            # dict(type="RandomRotateTargetAngle", angle=(1/2, 1, 3/2), center=[0, 0, 0], axis="z", p=0.75),
+
+            #this trasnform might be problematic,....
             #dict(type="RandomRotate", angle=[-1, 1], axis="z", center=[0, 0, 0], p=0.5),
-            #dict(type="RandomScale", scale=[0.9, 1.1]),
-            #dict(type="RandomFlip", p=0.5),
-            #dict(type="RandomJitter", sigma=0.005, clip=0.02),
-            #dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
+            # dict(type="RandomRotate", angle=[-1/6, 1/6], axis="x", p=0.5),
+            # dict(type="RandomRotate", angle=[-1/6, 1/6], axis="y", p=0.5),
+            ##dict(type="RandomScale", scale=[0.9, 1.1]),
+            # dict(type="RandomShift", shift=[0.2, 0.2, 0.2]),
+            ##dict(type="RandomFlip", p=0.5),
+            ##dict(type="RandomJitter", sigma=0.005, clip=0.02),
+            # dict(type="ElasticDistortion", distortion_params=[[0.2, 0.4], [0.8, 1.6]]),
             dict(
                 type="GridSample",
                 grid_size=0.05,
@@ -107,25 +119,17 @@ data = dict(
                 mode="train",
                 return_grid_coord=True,
             ),
-            #dict(type="NormalizeCoord"),  # temp to debug prinoputs
+            #this trasnform does not work with our data , since the georefernces use way larger numbers
             #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
-            #dict(type="SphereCrop", sample_rate=0.8, mode="random"),
-            #dict(type="SphereCrop", point_max=120000, mode="random"),
-            #dict(type="ToTensor"),
-            #dict(
-            #    type="Collect",
-            #    keys=("coord", "grid_coord", "segment"),
-            #    feat_keys=("coord", "strength"),
-            #),
-            dict(type="SphereCrop", point_max=2000, mode="random"),
+            ##dict(type="SphereCrop", sample_rate=0.8, mode="random"),
+            dict(type="SphereCrop", point_max=12000, mode="random"),
+            # dict(type="CenterShift", apply_z=False),
             dict(type="ToTensor"),
             dict(
                 type="Collect",
-                keys=("coord", "segment"),
+                keys=("coord", "grid_coord", "segment"),
                 feat_keys=("coord", "strength"),
-                ),
-   
-
+            ),
         ],
         test_mode=False,
         ignore_index=ignore_index,
@@ -135,8 +139,9 @@ data = dict(
         split="train",
         data_root=data_root,
         transform=[
+            #I guess this is here in order to have the orignal points left. 
+            dict(type="SphereCrop", point_max=12000, mode="random"),
             dict(type="Copy", keys_dict={"segment": "origin_segment"}),
-            #dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
             dict(
                 type="GridSample",
                 grid_size=0.05,
@@ -145,41 +150,34 @@ data = dict(
                 return_grid_coord=True,
                 return_inverse=True,
             ),
-
             #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
-   
-            dict(type="SphereCrop", point_max=2000, mode="random"),
             dict(type="ToTensor"),
             dict(
                 type="Collect",
-                keys=("coord","grid_coord", "segment"),
+                keys=("coord", "grid_coord", "segment", "origin_segment", "inverse"),
                 feat_keys=("coord", "strength"),
             ),
         ],
-   
         test_mode=False,
         ignore_index=ignore_index,
     ),
-
     test=dict(
         type=dataset_type,
-        split="val",
+        split="train",
         data_root=data_root,
         transform=[
-            #dict(type="NormalizeCoord"), # rasmus added this in order to make sure data is centred arund [0,0,0] and in teh range [-1,1]
+            #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
             dict(type="Copy", keys_dict={"segment": "origin_segment"}),
             dict(
                 type="GridSample",
-                grid_size=0.05,
+                grid_size=0.025,
                 hash_type="fnv",
-                mode="test",
+                mode="train",
                 return_inverse=True,
-                return_grid_coord=True,
             ),
         ],
         test_mode=True,
         test_cfg=dict(
-            #dict(type="NormalizeCoord"),
             voxelize=dict(
                 type="GridSample",
                 grid_size=0.05,
@@ -192,48 +190,48 @@ data = dict(
                 dict(type="ToTensor"),
                 dict(
                     type="Collect",
-                    keys=("coord", "grid_coord", "index","segment"),
+                    keys=("coord", "grid_coord", "index"),
                     feat_keys=("coord", "strength"),
                 ),
             ],
-            aug_transform=[],
-            #    [
-            #        dict(
-            #            type="RandomRotateTargetAngle",
-            #            angle=[0],
-            #            axis="z",
-            #            center=[0, 0, 0],
-            #            p=1,
-            #        )
-            #    ],
-            #    [
-            #        dict(
-            #            type="RandomRotateTargetAngle",
-            #            angle=[1 / 2],
-            #            axis="z",
-            #            center=[0, 0, 0],
-            #            p=1,
-            #        )
-            #    ],
-            #    [
-            #        dict(
-            #            type="RandomRotateTargetAngle",
-            #            angle=[1],
-            #            axis="z",
-            #            center=[0, 0, 0],
-            #            p=1,
-            #        )
-            #    ],
-            #    [
-            #        dict(
-            #            type="RandomRotateTargetAngle",
-            #            angle=[3 / 2],
-            #            axis="z",
-            #            center=[0, 0, 0],
-            #            p=1,
-            #        )
-            #    ],
-            #],
+            aug_transform=[
+                [
+                    dict(
+                        type="RandomRotateTargetAngle",
+                        angle=[0],
+                        axis="z",
+                        center=[0, 0, 0],
+                        p=1,
+                    )
+                ],
+                [
+                    dict(
+                        type="RandomRotateTargetAngle",
+                        angle=[1 / 2],
+                        axis="z",
+                        center=[0, 0, 0],
+                        p=1,
+                    )
+                ],
+                [
+                    dict(
+                        type="RandomRotateTargetAngle",
+                        angle=[1],
+                        axis="z",
+                        center=[0, 0, 0],
+                        p=1,
+                    )
+                ],
+                [
+                    dict(
+                        type="RandomRotateTargetAngle",
+                        angle=[3 / 2],
+                        axis="z",
+                        center=[0, 0, 0],
+                        p=1,
+                    )
+                ],
+            ],
         ),
         ignore_index=ignore_index,
     ),

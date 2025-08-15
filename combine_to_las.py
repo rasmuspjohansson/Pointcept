@@ -46,6 +46,7 @@ def combine_to_las(pred_file, data_root, output_las):
         # --- 4. Create and Populate LAS file ---
         # Use a point format that supports intensity and classification
         header = laspy.LasHeader(point_format=2, version="1.2")
+        las = laspy.LasData(header)
 
         # Set the CRS using the appropriate method for your laspy version
         try:
@@ -55,7 +56,6 @@ def combine_to_las(pred_file, data_root, output_las):
         except ImportError:
             # For older laspy versions
             las.header.wkt = 'PROJCS["ETRS89 / UTM zone 32N",GEOGCS["ETRS89",DATUM["European_Terrestrial_Reference_System_1989",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6258"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4258"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",9],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","25832"]]'
-        las = laspy.LasData(header)
 
         las.x = scan[:, 0]
         las.y = scan[:, 1]
@@ -71,6 +71,8 @@ def combine_to_las(pred_file, data_root, output_las):
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
+
+    print("start")
     parser = argparse.ArgumentParser(
         description="Combine a .bin point cloud and a .npy prediction into a classified .las file."
     )

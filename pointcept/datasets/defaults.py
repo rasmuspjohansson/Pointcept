@@ -150,10 +150,24 @@ class DefaultDataset(Dataset):
         return data_dict
 
     def prepare_test_data(self, idx):
+        import random
+        counter = random.randint(1,1000)
         # load data
         data_dict = self.get_data(idx)
         data_dict = self.transform(data_dict)
+        print("PREPARE TEST DATA START "+str(counter)+"############################################")
+
+        print("data_dict "+str(counter)+":"+str(data_dict))
+
+        #print('data_dict.pop("segment")'+str(data_dict.pop("segment")))
+        #print('data_dict.pop("name") :'+str(counter)+"  "+str(data_dict.pop("name")))
+        #print('data_dict.pop("segment") :'+str(counter)+"  "+str(data_dict.pop("segment")))
+        print("A")
+        print(data_dict.keys())
+        print("A2")
         result_dict = dict(segment=data_dict.pop("segment"), name=data_dict.pop("name"))
+        print("B")
+        print("PREPARE DATA END "+str(counter)+"##################################################")
         if "origin_segment" in data_dict:
             assert "inverse" in data_dict
             result_dict["origin_segment"] = data_dict.pop("origin_segment")
