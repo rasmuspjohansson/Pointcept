@@ -1035,3 +1035,13 @@ python tools/train.py --config configs/semantic_kitti_style_Dataset2_Argorn/sems
 
 THIS NOW WORKS, BUT its seems like all points are classified to the same value! so something is wrong! 
 python tools/test.py --config configs/semantic_kitti_style_Dataset2_Argorn/semseg-pt-v2m2-dataset2Argorn.py --options weight=exp/default/model/model_best.pth
+
+
+
+problem above was casued by folder beeing named label instgead of labels. and that the code then asumed label was 0.
+if only one file exists , then batch will be consisitn og only one datapoint even if batch is set to larger value.
+
+The following trained a model that classified several differetn kinds of labels corectly (but not all the time)
+python tools/train.py --config configs/semantic_kitti_style_Dataset2_Argorn/trains_validates_and_tests_works.py
+
+TODO:! the trained model is saved as best_model.pth , load it and adjust validation set to use a complete splitted .bin file containing differetn classes. WITHOUT ANY CROP!

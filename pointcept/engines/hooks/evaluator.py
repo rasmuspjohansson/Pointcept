@@ -19,6 +19,25 @@ from .default import HookBase
 from .builder import HOOKS
 
 
+def print_unique_values(tensor):
+    """
+    Takes a PyTorch tensor and prints all unique integer values that occur in it.
+    
+    Args:
+        tensor: PyTorch tensor containing integer values
+    
+    Returns:
+        None (prints the unique values)
+    """
+    # Get unique values and sort them
+    unique_vals = torch.unique(tensor).tolist()
+    
+    # Convert to integers if they're floats (in case tensor dtype is float)
+    unique_vals = [int(val) for val in unique_vals]
+    
+    print(unique_vals)
+
+
 @HOOKS.register_module()
 class ClsEvaluator(HookBase):
     def after_epoch(self):
@@ -118,6 +137,7 @@ class SemSegEvaluator(HookBase):
 
     def eval(self):
         self.trainer.logger.info(">>>>>>>>>>>>>>>> Start Evaluation >>>>>>>>>>>>>>>>")
+        print("pointcept/engines/hooks/evaluator.py:")
         self.trainer.model.eval()
         for i, input_dict in enumerate(self.trainer.val_loader):
             for key in input_dict.keys():
@@ -129,6 +149,14 @@ class SemSegEvaluator(HookBase):
             loss = output_dict["loss"]
             pred = output.max(1)[1]
             segment = input_dict["segment"]
+
+            print("SEgment")
+            print(segment)
+            print_unique_values(segment)
+
+            print("prediction")
+            print(pred)
+            print_unique_values(pred)
             if "inverse" in input_dict.keys():
                 assert "origin_segment" in input_dict.keys()
                 pred = pred[input_dict["inverse"]]

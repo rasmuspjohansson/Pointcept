@@ -15,9 +15,9 @@ class SemanticKITTIDataset(DefaultDataset):
 
     def get_data_list(self):
         split2seq = dict(
-            train=["00"],# '00_split' #train=[0, 1, 2, 3, 4, 5, 6, 7, 9, 10],
-            val=["00"], #val=[8],
-            test =["00"], #test=[11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+            train=["train"],# '00_split' #train=[0, 1, 2, 3, 4, 5, 6, 7, 9, 10],
+            val=["valid"], #val=[8],
+            test =["test"], #test=[11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
         )
         if isinstance(self.split, str):
             seq_list = split2seq[self.split]
@@ -64,7 +64,7 @@ class SemanticKITTIDataset(DefaultDataset):
 
 
     def get_data(self, idx):
-        print(idx)
+        #print(idx)
         data_path = self.data_list[idx % len(self.data_list)]
         print("data_path"+str(data_path))
         with open(data_path, "rb") as b:
@@ -72,21 +72,26 @@ class SemanticKITTIDataset(DefaultDataset):
         coord = scan[:, :3].astype(np.float32)
         # now done in separate trANSFOMR ! coord -= coord.mean(axis=0)
         #coord /= np.abs(coord).max()
-        print(coord[0])
-        print(coord.min())
-        print(coord.max())
-        print("semantic_kitti.py : nr of points loaded : "+str(len(coord)))
+        #print(coord[0])
+        #print(coord.min())
+        #print(coord.max())
+        #print("semantic_kitti.py : nr of points loaded : "+str(len(coord)))
 
 
         strength = scan[:, -1].reshape([-1, 1]).astype(np.float32)
         label_file = data_path.replace("velodyne", "labels").replace(".bin", ".label")
+
+        print("label_file:"+str(label_file))
         if os.path.exists(label_file):
             with open(label_file, "rb") as a:
                 raw_segment = np.fromfile(a, dtype=np.int32).reshape(-1)
                 segment = np.vectorize(self.learning_map.__getitem__)(
                     raw_segment & 0xFFFF
                 ).astype(np.int32)
+                print("raw_segment:"+str(raw_segment))
+                print("translated segment: "+str(segment))
         else:
+            sys.exit("did not find label file!")
             segment = np.zeros(scan.shape[0]).astype(np.int32)
 
         data_dict = dict(
@@ -97,12 +102,12 @@ class SemanticKITTIDataset(DefaultDataset):
 
         )
         data_dict["segment"][data_dict["segment"]==-1] =1
-        print(data_dict["segment"])
-        print("data_dict max()")
+        #print(data_dict["segment"])
+        #print("data_dict max()")
 
-        print(data_dict["segment"].max())
-        print("data_dict min()")
-        print(data_dict["segment"].min())
+        #print(data_dict["segment"].max())
+        #print("data_dict min()")
+        #print(data_dict["segment"].min())
         return data_dict
 
     def OLD_get_data(self, idx):
@@ -186,24 +191,25 @@ class SemanticKITTIDataset(DefaultDataset):
         #orignal nmubers 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 17, 18, 64, 66, 67, 68
 
         return {
-            1: 0,  # Ground
-            2: 1,  # Railway
-            3: 2,  # Roads
-            4: 3,  # Veg.Low
-            5: 4,  # Veg.Medium
-            6: 5,  # Veg.High
+            0: ignore_index,
+            1: ignore_index,  #
+            2: 1,  # ground 
+            3: 2,  # Veg.Low
+            4: 3,  # Veg.MEdium
+            5: 4,  # Veg.High
+            6: 5,  # Buildings
             7: ignore_index,
-            9: 6,  # Buildings
-            10: 7, # Water
-            11: 8, # Bridges
-            12: 9, # Vehicles
+            9: 6,  # 
+            10: 7, # 
+            11: 8, # ROAD 
+            12: ignore_index, # 
             14:ignore_index,
-            15: 10, # Electrical_Towers
-            17: 11, # Power_lines
-            18: 12, # Solar_panels
-            64: 13, # Wind_turbines
+            15: 10, #                   ?
+            17: 11, #      ?                 Power_lines
+            18: ignore_index, #                       Solar_panels
+            64: 13, # Vehicles                       Wind_turbines
             # Map other unwanted labels to ignore_index
-            66: ignore_index,
+            66: ignore_index, #this is in the dataset but I dont know what it is!!  most probably power towers! 
             67: ignore_index,
             68: ignore_index,
             # Add any other labels present in your raw data that should be ignored or mapped
@@ -214,8 +220,7 @@ class SemanticKITTIDataset(DefaultDataset):
     def get_learning_map_inv(ignore_index):
         # Inverse mapping from 0-13 back to your original dataset labels
         return {
-            ignore_index: -1, # Assuming 255 was the original ignore
-            0: 1,   # Ground
+            ignore_index: 0, # Assuming 255 was the original ignore
             1: 2,   # Railway
             2: 3,   # Roads
             3: 4,   # Veg.Low
@@ -224,10 +229,10 @@ class SemanticKITTIDataset(DefaultDataset):
             6: 9,   # Buildings
             7: 10,  # Water
             8: 11,  # Bridges
-            9: 12,  # Vehicles
+            9: 9,  # Vehicles
             10: 15, # Electrical_Towers
             11: 17, # Power_lines
-            12: 18, # Solar_panels
+            12: 12, # Solar_panels
             13: 64, # Wind_turbines
             # Note: 66 and 67 were mapped to ignore_index, so they don't have an inverse mapping here unless you specifically want to map ignore_index to one of them.
         }

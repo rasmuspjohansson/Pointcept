@@ -2,8 +2,11 @@ _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
 # misc custom setting
-batch_size = 8  # bs: total bs in all gpus
-num_worker = 1
+batch_size = 16  # bs: total bs in all gpus
+num_worker = 16
+weight = None # "saved_model_best.pth"  # path to model weight
+
+
 
 mix_prob = 0.8
 empty_cache = False
@@ -52,8 +55,8 @@ model = dict(
 )
 
 # scheduler settings
-epoch = 3
-eval_epoch = 1
+epoch = 50
+eval_epoch = 50
 optimizer = dict(type="AdamW", lr=0.002, weight_decay=0.005)
 scheduler = dict(
     type="OneCycleLR",
@@ -122,7 +125,7 @@ data = dict(
             #this trasnform does not work with our data , since the georefernces use way larger numbers
             #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
             ##dict(type="SphereCrop", sample_rate=0.8, mode="random"),
-            dict(type="SphereCrop", point_max=12000, mode="random"),
+            dict(type="SphereCrop", point_max=1200, mode="random"),
             # dict(type="CenterShift", apply_z=False),
             dict(type="ToTensor"),
             dict(
@@ -134,13 +137,52 @@ data = dict(
         test_mode=False,
         ignore_index=ignore_index,
     ),
-    val=dict(
+    val = dict(
         type=dataset_type,
-        split="train",
+        split="val",
         data_root=data_root,
         transform=[
-            #I guess this is here in order to have the orignal points left. 
-            dict(type="SphereCrop", point_max=12000, mode="random"),
+            # dict(type="RandomDropout", dropout_ratio=0.2, dropout_application_ratio=0.2),
+            # dict(type="RandomRotateTargetAngle", angle=(1/2, 1, 3/2), center=[0, 0, 0], axis="z", p=0.75),
+
+            #this trasnform might be problematic,....
+            #dict(type="RandomRotate", angle=[-1, 1], axis="z", center=[0, 0, 0], p=0.5),
+            # dict(type="RandomRotate", angle=[-1/6, 1/6], axis="x", p=0.5),
+            # dict(type="RandomRotate", angle=[-1/6, 1/6], axis="y", p=0.5),
+            ##dict(type="RandomScale", scale=[0.9, 1.1]),
+            # dict(type="RandomShift", shift=[0.2, 0.2, 0.2]),
+            ##dict(type="RandomFlip", p=0.5),
+            ##dict(type="RandomJitter", sigma=0.005, clip=0.02),
+            # dict(type="ElasticDistortion", distortion_params=[[0.2, 0.4], [0.8, 1.6]]),
+            dict(
+                type="GridSample",
+                grid_size=0.05,
+                hash_type="fnv",
+                mode="train",
+                return_grid_coord=True,
+            ),
+            #this trasnform does not work with our data , since the georefernces use way larger numbers
+            #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
+            ##dict(type="SphereCrop", sample_rate=0.8, mode="random"),
+            dict(type="SphereCrop", point_max=1200, mode="random"),
+            # dict(type="CenterShift", apply_z=False),
+            dict(type="ToTensor"),
+            dict(
+                type="Collect",
+                keys=("coord", "grid_coord", "segment"),
+                feat_keys=("coord", "strength"),
+            ),
+        ],
+        test_mode=False,
+        ignore_index=ignore_index,
+    ),
+    removed_val=dict(
+        type=dataset_type,
+        split="val",
+        data_root=data_root,
+        transform=[
+            dict(type="SphereCrop", point_max=1200, mode="random"),
+            #I guess this is here in order to have the orignal points left.
             dict(type="Copy", keys_dict={"segment": "origin_segment"}),
             dict(
                 type="GridSample",
@@ -161,9 +203,48 @@ data = dict(
         test_mode=False,
         ignore_index=ignore_index,
     ),
+    not_used_test= dict(
+        type=dataset_type,
+        split="val",
+        data_root=data_root,
+        transform=[
+            # dict(type="RandomDropout", dropout_ratio=0.2, dropout_application_ratio=0.2),
+            # dict(type="RandomRotateTargetAngle", angle=(1/2, 1, 3/2), center=[0, 0, 0], axis="z", p=0.75),
+
+            #this trasnform might be problematic,....
+            #dict(type="RandomRotate", angle=[-1, 1], axis="z", center=[0, 0, 0], p=0.5),
+            # dict(type="RandomRotate", angle=[-1/6, 1/6], axis="x", p=0.5),
+            # dict(type="RandomRotate", angle=[-1/6, 1/6], axis="y", p=0.5),
+            ##dict(type="RandomScale", scale=[0.9, 1.1]),
+            # dict(type="RandomShift", shift=[0.2, 0.2, 0.2]),
+            ##dict(type="RandomFlip", p=0.5),
+            ##dict(type="RandomJitter", sigma=0.005, clip=0.02),
+            # dict(type="ElasticDistortion", distortion_params=[[0.2, 0.4], [0.8, 1.6]]),
+            dict(
+                type="GridSample",
+                grid_size=0.05,
+                hash_type="fnv",
+                mode="train",
+                return_grid_coord=True,
+            ),
+            #this trasnform does not work with our data , since the georefernces use way larger numbers
+            #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),
+            ##dict(type="SphereCrop", sample_rate=0.8, mode="random"),
+            dict(type="SphereCrop", point_max=1200, mode="random"),
+            # dict(type="CenterShift", apply_z=False),
+            dict(type="ToTensor"),
+            dict(
+                type="Collect",
+                keys=("coord", "grid_coord", "segment"),
+                feat_keys=("coord", "strength"),
+            ),
+        ],
+        test_mode=False,
+        ignore_index=ignore_index,
+    ),
     test=dict(
         type=dataset_type,
-        split="train",
+        split="test",
         data_root=data_root,
         transform=[
             #dict(type="PointClip", point_cloud_range=(-35.2, -35.2, -4, 35.2, 35.2, 2)),

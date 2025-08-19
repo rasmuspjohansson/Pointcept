@@ -247,7 +247,9 @@ class SemSegTester(TesterBase):
                     sequence_name = parts[0] + "_split"
                     frame_name = parts[1]
                 else:
-                    sequence_name, frame_name = data_name.split("_")
+                    splitted = data_name.split("_")
+                    sequence_name= splitted[0]
+                    frame_name = splitted[1]
                 os.makedirs(
                     os.path.join(
                         save_path, "submit", "sequences", sequence_name, "predictions"

@@ -557,9 +557,9 @@ class PointTransformerV2(nn.Module):
         coord = data_dict["coord"]
         feat = data_dict["feat"]
         offset = data_dict["offset"].int()
-        print("point_transformer_v2m2_base.py : coord "+str(coord))
-        print("point_transformer_v2m2_base.py : offset "+str(offset))
-        print("nr of points: "+str(coord.shape))
+        #print("point_transformer_v2m2_base.py : coord "+str(coord))
+        #print("point_transformer_v2m2_base.py : offset "+str(offset))
+        #print("nr of points: "+str(coord.shape))
 
         # a batch of point cloud is a list of coord, feat and offset
         points = [coord, feat, offset]
@@ -576,4 +576,19 @@ class PointTransformerV2(nn.Module):
             points = self.dec_stages[i](points, skip_points, cluster)
         coord, feat, offset = points
         seg_logits = self.seg_head(feat)
+        print("seg_logits.shape():"+str(seg_logits.shape))
+
+        # predicted classes (argmax per point)
+        pred_classes = seg_logits.argmax(dim=-1)  
+
+        # ground truth labels (must be in your data_dict)
+        print(data_dict)
+        if "segment" in data_dict:
+            labels = data_dict["segment"].long()
+            print("Predicted classes:", pred_classes)
+            print("Ground truth labels:", labels)
+        else:
+            print("Predicted classes:", pred_classes)
+            print("⚠️ No labels found in data_dict")
+
         return seg_logits

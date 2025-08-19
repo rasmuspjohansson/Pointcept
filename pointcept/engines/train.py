@@ -269,6 +269,8 @@ class Trainer(TrainerBase):
         else:
             train_sampler = None
 
+        input("self.cfg.num_worker_per_gpu:"+str(self.cfg.num_worker_per_gpu))
+
         init_fn = (
             partial(
                 worker_init_fn,
